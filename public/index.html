@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Editor - Login</title>
+    <meta name="description" content="Online HTML, CSS, JavaScript code editor with live preview">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+                        <path d="M15 45L5 30L15 15" stroke="url(#gradient1)" stroke-width="4" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                        <path d="M45 15L55 30L45 45" stroke="url(#gradient2)" stroke-width="4" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                        <path d="M35 10L25 50" stroke="url(#gradient3)" stroke-width="4" stroke-linecap="round" />
+                        <defs>
+                            <linearGradient id="gradient1" x1="5" y1="15" x2="15" y2="45"
+                                gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#667eea" />
+                                <stop offset="1" stop-color="#764ba2" />
+                            </linearGradient>
+                            <linearGradient id="gradient2" x1="45" y1="15" x2="55" y2="45"
+                                gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#f093fb" />
+                                <stop offset="1" stop-color="#f5576c" />
+                            </linearGradient>
+                            <linearGradient id="gradient3" x1="25" y1="10" x2="35" y2="50"
+                                gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#4facfe" />
+                                <stop offset="1" stop-color="#00f2fe" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <h1 class="app-title">CodeSpace</h1>
+                <p class="app-subtitle">Write. Preview. Create.</p>
+            </div>
+
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label for="rollNo">Roll Number</label>
+                    <input type="text" id="rollNo" name="rollNo" placeholder="e.g., CS2024001" required
+                        autocomplete="off">
+                </div>
+
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" name="name" placeholder="Enter your full name" required
+                        autocomplete="name">
+                </div>
+
+                <button type="submit" class="btn-primary" id="loginBtn">
+                    <span class="btn-text">Continue to Editor</span>
+                    <svg class="btn-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M7 4L13 10L7 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                </button>
+
+                <div id="message" class="message"></div>
+            </form>
+
+            <div class="features">
+                <div class="feature">
+                    <span class="feature-icon">✨</span>
+                    <span>Live Preview</span>
+                </div>
+                <div class="feature">
+                    <span class="feature-icon">💾</span>
+                    <span>Auto Save</span>
+                </div>
+                <div class="feature">
+                    <span class="feature-icon">🎨</span>
+                    <span>Syntax Highlighting</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="background-decoration">
+            <div class="circle circle-1"></div>
+            <div class="circle circle-2"></div>
+            <div class="circle circle-3"></div>
+        </div>
+    </div>
+
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const messageDiv = document.getElementById('message');
+        const loginBtn = document.getElementById('loginBtn');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const rollNo = document.getElementById('rollNo').value.trim();
+            const name = document.getElementById('name').value.trim();
+
+            if (!rollNo || !name) {
+                showMessage('Please fill in all fields', 'error');
+                return;
+            }
+
+            // Show loading state
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<span class="btn-text">Loading...</span>';
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ rollNo, name })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Store user info
+                    localStorage.setItem('user', JSON.stringify(data.user));
+
+                    showMessage(data.message, 'success');
+
+                    // Redirect to dashboard
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 1000);
+                } else {
+                    showMessage(data.message || 'Login failed', 'error');
+                    resetButton();
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showMessage('Connection error. Please try again.', 'error');
+                resetButton();
+            }
+        });
+
+        function showMessage(text, type) {
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+        }
+
+        function resetButton() {
+            loginBtn.disabled = false;
+            loginBtn.innerHTML = `
+                <span class="btn-text">Continue to Editor</span>
+                <svg class="btn-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M7 4L13 10L7 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            `;
+        }
+
+        // Auto-focus on roll number field
+        document.getElementById('rollNo').focus();
+    </script>
+</body>
+
+</html>

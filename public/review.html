@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submission Review - CodeSpace Admin</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            height: 100vh;
+            overflow: hidden;
+            background: #0f172a;
+        }
+
+        .review-layout {
+            display: grid;
+            grid-template-rows: 70px 1fr;
+            height: 100vh;
+        }
+
+        .review-header {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 24px;
+        }
+
+        .review-main {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .code-panels {
+            display: grid;
+            grid-template-rows: 1fr 1fr 1fr;
+            background: #1e293b;
+            overflow-y: auto;
+        }
+
+        .code-panel {
+            display: flex;
+            flex-direction: column;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .panel-label {
+            padding: 8px 16px;
+            background: rgba(0, 0, 0, 0.2);
+            font-size: 12px;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .code-view {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            padding: 16px;
+            background: transparent;
+            color: #e2e8f0;
+            font-family: 'Fira Code', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            border: none;
+            resize: none;
+            outline: none;
+        }
+
+        .preview-pane {
+            background: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #previewFrame {
+            width: 100%;
+            flex: 1;
+            border: none;
+            background: white;
+        }
+
+        .student-badge {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            background: var(--primary-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .submission-meta {
+            text-align: right;
+            font-size: 14px;
+        }
+
+        .status-tag {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .tag-submitted {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+
+        .tag-disqualified {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .btn-back {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-back:hover {
+            border-color: var(--text-primary);
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="review-layout">
+        <header class="review-header">
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <a href="/admin" class="btn-back">← Admin Panel</a>
+                <div class="student-badge">
+                    <div class="avatar" id="studentAvatar">S</div>
+                    <div>
+                        <div style="font-weight: 600; color: white;" id="studentName">Student Name</div>
+                        <div style="font-size: 12px; color: #94a3b8;" id="studentRoll">Roll No</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="examTitle" style="font-weight: 500; color: #cbd5e1;">Loading Submission...</div>
+
+            <div class="submission-meta">
+                <span id="statusTag" class="status-tag">STATUS</span>
+                <div style="color: #94a3b8; margin-top: 4px;" id="submittedAt">Submitted At</div>
+            </div>
+        </header>
+
+        <main class="review-main">
+            <div class="code-panels">
+                <div class="code-panel">
+                    <div class="panel-label">HTML Content</div>
+                    <textarea id="htmlView" class="code-view" readonly></textarea>
+                </div>
+                <div class="code-panel">
+                    <div class="panel-label">CSS Styling</div>
+                    <textarea id="cssView" class="code-view" readonly></textarea>
+                </div>
+                <div class="code-panel">
+                    <div class="panel-label">JavaScript Logic</div>
+                    <textarea id="jsView" class="code-view" readonly></textarea>
+                </div>
+            </div>
+            <div class="preview-pane">
+                <div class="panel-label" style="background: #f8fafc; color: #64748b; border-bottom: 1px solid #e2e8f0;">
+                    Live Preview Output</div>
+                <iframe id="previewFrame"></iframe>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const adminToken = localStorage.getItem('adminToken');
+        if (!adminToken) {
+            window.location.href = '/admin-login.html';
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const subId = urlParams.get('id');
+
+        async function initReview() {
+            if (!subId) return;
+
+            try {
+                const response = await fetch(`/api/admin/submissions/${subId}`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    const sub = data.submission;
+
+                    // Update Headers
+                    document.getElementById('studentName').textContent = sub.userId.name;
+                    document.getElementById('studentRoll').textContent = sub.userId.rollNo;
+                    document.getElementById('studentAvatar').textContent = sub.userId.name.charAt(0).toUpperCase();
+                    document.getElementById('examTitle').textContent = `Evaluating: ${sub.examId.title}`;
+
+                    const statusTag = document.getElementById('statusTag');
+                    statusTag.textContent = sub.status;
+                    statusTag.className = `status-tag tag-${sub.status.toLowerCase()}`;
+
+                    document.getElementById('submittedAt').textContent = `Submitted: ${new Date(sub.submittedAt).toLocaleString()}`;
+
+                    // Update Code Views
+                    document.getElementById('htmlView').value = sub.html || '<!-- No HTML provided -->';
+                    document.getElementById('cssView').value = sub.css || '/* No CSS provided */';
+                    document.getElementById('jsView').value = sub.javascript || '// No JavaScript provided';
+
+                    // Update Preview
+                    const output = `
+                        <!DOCTYPE html>
+                        <html>
+                          <head>
+                            <style>${sub.css || ''}</style>
+                          </head>
+                          <body>
+                            ${sub.html || ''}
+                            <script>
+                              try {
+                                ${sub.javascript || ''}
+                              } catch (err) {
+                                console.error('Runtime Error:', err.message);
+                              }
+                            <\/script>
+                          </body>
+                        </html>
+                    `;
+                    document.getElementById('previewFrame').srcdoc = output;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to load submission data.');
+            }
+        }
+
+        initReview();
+    </script>
+</body>
+
+</html>

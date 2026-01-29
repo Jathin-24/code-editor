@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Mode - CodeSpace</title>
+    <meta name="description" content="Secure exam mode for coding tests">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="exam-mode.css">
+</head>
+
+<body class="exam-mode">
+    <!-- Exam Banner -->
+    <div class="exam-banner">
+        <div class="exam-banner-left">
+            <h2 id="examTitle">Loading Exam...</h2>
+            <p id="examDescription">Please wait...</p>
+        </div>
+        <div class="exam-banner-right">
+            <div class="exam-status-badge active">
+                <span class="exam-status-indicator"></span>
+                <span>EXAM ACTIVE</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exam Timer -->
+    <div class="exam-timer" id="examTimer">
+        <span class="exam-timer-icon">⏱️</span>
+        <span class="exam-timer-text" id="timerDisplay">--:--</span>
+    </div>
+
+    <!-- Violation Counter -->
+    <div class="violation-counter" id="violationCounter" style="display: none;">
+        ⚠️ Violations: <span id="violationCount">0</span>/3
+    </div>
+
+    <div class="editor-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <div class="logo-small">
+                    <svg width="30" height="30" viewBox="0 0 60 60" fill="none">
+                        <path d="M15 45L5 30L15 15" stroke="url(#hgradient1)" stroke-width="4" stroke-linecap="round" />
+                        <path d="M45 15L55 30L45 45" stroke="url(#hgradient2)" stroke-width="4"
+                            stroke-linecap="round" />
+                        <path d="M35 10L25 50" stroke="url(#hgradient3)" stroke-width="4" stroke-linecap="round" />
+                        <defs>
+                            <linearGradient id="hgradient1">
+                                <stop stop-color="#667eea" />
+                                <stop offset="1" stop-color="#764ba2" />
+                            </linearGradient>
+                            <linearGradient id="hgradient2">
+                                <stop stop-color="#f093fb" />
+                                <stop offset="1" stop-color="#f5576c" />
+                            </linearGradient>
+                            <linearGradient id="hgradient3">
+                                <stop stop-color="#4facfe" />
+                                <stop offset="1" stop-color="#00f2fe" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <h1 class="header-title">🔒 EXAM MODE</h1>
+            </div>
+
+            <div class="header-center">
+                <div class="user-info" id="userInfo">
+                    <span class="user-avatar" id="userAvatar">U</span>
+                    <span class="user-name" id="userName">User</span>
+                    <span class="user-roll" id="userRoll">ROLL001</span>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <button class="btn-submit-exam" id="submitExamBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M9 11L12 14L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                        <path
+                            d="M21 12V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H16"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    Submit Exam
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Editor Area -->
+        <div class="editor-main">
+            <!-- Code Panels with Question -->
+            <div class="code-panels">
+                <!-- Question Panel -->
+                <div class="exam-question-panel">
+                    <h3>📋 Exam Question</h3>
+                    <p id="questionText">Loading question...</p>
+                </div>
+
+                <!-- HTML Panel -->
+                <div class="code-panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#E34C26" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                                <path d="M2 17L12 22L22 17" stroke="#E34C26" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                                <path d="M2 12L12 17L22 12" stroke="#E34C26" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg>
+                            <span>HTML</span>
+                        </div>
+                    </div>
+                    <textarea id="htmlCode" class="code-editor" placeholder="<!-- Write your HTML solution here -->"
+                        spellcheck="false"></textarea>
+                </div>
+
+                <!-- CSS Panel -->
+                <div class="code-panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                <rect x="3" y="3" width="18" height="18" rx="2" stroke="#264DE4" stroke-width="2" />
+                                <path d="M8 12L12 16L16 8" stroke="#264DE4" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg>
+                            <span>CSS</span>
+                        </div>
+                    </div>
+                    <textarea id="cssCode" class="code-editor" placeholder="/* Write your CSS solution here */"
+                        spellcheck="false"></textarea>
+                </div>
+
+                <!-- JavaScript Panel -->
+                <div class="code-panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                <rect x="2" y="2" width="20" height="20" rx="2" stroke="#F7DF1E" stroke-width="2" />
+                                <path d="M8 16C8 17.1046 8.89543 18 10 18C11.1046 18 12 17.1046 12 16V8"
+                                    stroke="#F7DF1E" stroke-width="2" stroke-linecap="round" />
+                                <path d="M14 14C14 15.6569 15.3431 17 17 17C18.6569 17 20 15.6569 20 14"
+                                    stroke="#F7DF1E" stroke-width="2" stroke-linecap="round" />
+                            </svg>
+                            <span>JavaScript</span>
+                        </div>
+                    </div>
+                    <textarea id="jsCode" class="code-editor" placeholder="// Write your JavaScript solution here"
+                        spellcheck="false"></textarea>
+                </div>
+            </div>
+
+            <!-- Preview Panel -->
+            <div class="preview-section">
+                <div class="preview-header">
+                    <div class="panel-title">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2" />
+                            <path d="M3 9H21" stroke="currentColor" stroke-width="2" />
+                            <circle cx="6.5" cy="6" r="0.5" fill="currentColor" />
+                            <circle cx="9" cy="6" r="0.5" fill="currentColor" />
+                            <circle cx="11.5" cy="6" r="0.5" fill="currentColor" />
+                        </svg>
+                        <span>Output Preview</span>
+                    </div>
+                </div>
+                <iframe id="preview" class="preview-iframe" sandbox="allow-scripts allow-modals"></iframe>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-left">
+                <span class="status-indicator" id="statusIndicator">●</span>
+                <span class="status-text" id="statusText">Exam in progress</span>
+            </div>
+            <div class="status-right">
+                <span id="autoSaveStatus">Auto-saving enabled</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="exam-proctor.js"></script>
+    <script src="exam-script.js"></script>
+</body>
+
+</html>

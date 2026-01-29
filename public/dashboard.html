@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - CodeSpace</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .welcome-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .user-welcome h1 {
+            font-size: 32px;
+            margin-bottom: 8px;
+            background: var(--primary-gradient);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .user-welcome p {
+            color: var(--text-secondary);
+            font-size: 18px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+
+        .section-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 30px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .section-header h2 {
+            font-size: 24px;
+            color: var(--text-primary);
+        }
+
+        .exam-list {
+            display: grid;
+            gap: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 15px;
+        }
+
+        /* Custom Scrollbar */
+        .exam-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .exam-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .exam-list::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 10px;
+        }
+
+        .exam-list::-webkit-scrollbar-thumb:hover {
+            background: #667eea;
+        }
+
+        .exam-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            transition: var(--transition);
+        }
+
+        .exam-card:hover {
+            border-color: #667eea;
+            transform: translateY(-4px);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .exam-info h3 {
+            font-size: 20px;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .exam-meta {
+            display: flex;
+            gap: 20px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-start {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary-gradient);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-start:hover {
+            opacity: 0.9;
+            transform: scale(1.02);
+        }
+
+        .practice-card {
+            text-align: center;
+            height: fit-content;
+        }
+
+        .practice-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .btn-logout {
+            padding: 10px 20px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid #ef4444;
+            color: #ef4444;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .no-exams {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <header class="welcome-section">
+            <div class="user-welcome">
+                <h1 id="welcomeText">Hello, Student!</h1>
+                <p id="rollNoText">Roll No: Loading...</p>
+            </div>
+            <button onclick="logout()" class="btn-logout">Logout</button>
+        </header>
+
+        <div class="dashboard-grid">
+            <div class="section-card">
+                <div class="section-header">
+                    <h2>📝 Active Exams</h2>
+                    <span id="examCount" style="color: #22c55e;">● Live</span>
+                </div>
+                <div id="examsContainer" class="exam-list">
+                    <div class="no-exams">
+                        <p>Looking for active exams...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-card practice-card">
+                <div class="practice-icon">🚀</div>
+                <h2>Practice Mode</h2>
+                <p style="color: var(--text-secondary); margin: 16px 0 24px 0;">
+                    Want to experiment? Use the standard editor for practice. No timers, no restrictions.
+                </p>
+                <button onclick="location.href='/editor'" class="btn-start"
+                    style="background: rgba(102, 126, 234, 0.2); color: #667eea; border: 1px solid #667eea;">
+                    Open Standard Editor
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) {
+            window.location.href = '/';
+        }
+
+        document.getElementById('welcomeText').textContent = `Hello, ${user.name}!`;
+        document.getElementById('rollNoText').textContent = `Roll No: ${user.rollNo}`;
+
+        async function fetchExams() {
+            try {
+                const response = await fetch('/api/exams/active');
+                const data = await response.json();
+
+                const container = document.getElementById('examsContainer');
+
+                if (data.success && data.exams.length > 0) {
+                    const examsWithStatus = await Promise.all(data.exams.map(async (exam) => {
+                        const subResponse = await fetch(`/api/exams/${exam._id}/submission/${user.rollNo}`);
+                        const subData = await subResponse.json();
+                        return { ...exam, submission: subData.submission };
+                    }));
+
+                    container.innerHTML = examsWithStatus.map(exam => {
+                        const now = new Date();
+                        const startTime = new Date(exam.startTime);
+                        const endTime = new Date(exam.endTime);
+
+                        const isNotStarted = now < startTime;
+                        const isExpired = now > endTime;
+                        const isSubmitted = exam.submission && exam.submission.status === 'SUBMITTED';
+                        const isDisqualified = exam.submission && exam.submission.status === 'DISQUALIFIED';
+                        const isInProgress = exam.submission && exam.submission.status === 'IN_PROGRESS';
+
+                        let btnText = 'Attempt Exam';
+                        let btnStyle = '';
+                        let statusBadge = '';
+                        let isDisabled = false;
+
+                        if (isSubmitted) {
+                            btnText = 'Exam Submitted ✅';
+                            btnStyle = 'background: #22c55e; cursor: not-allowed;';
+                            statusBadge = '<span style="color: #22c55e; font-size: 12px; font-weight: 600;">COMPLETED</span>';
+                            isDisabled = true;
+                        } else if (isDisqualified) {
+                            btnText = 'Disqualified ❌';
+                            btnStyle = 'background: #ef4444; cursor: not-allowed;';
+                            statusBadge = '<span style="color: #ef4444; font-size: 12px; font-weight: 600;">DISQUALIFIED</span>';
+                            isDisabled = true;
+                        } else if (isExpired) {
+                            btnText = 'Exam Ended';
+                            btnStyle = 'background: #64748b; cursor: not-allowed;';
+                            statusBadge = '<span style="color: #64748b; font-size: 12px; font-weight: 600;">EXPIRED</span>';
+                            isDisabled = true;
+                        } else if (isNotStarted) {
+                            btnText = `Starts at ${startTime.toLocaleTimeString()}`;
+                            btnStyle = 'background: #475569; cursor: not-allowed;';
+                            statusBadge = '<span style="color: #94a3b8; font-size: 12px; font-weight: 600;">UPCOMING</span>';
+                            isDisabled = true;
+                        } else if (isInProgress) {
+                            btnText = 'Continue Attempt';
+                            btnStyle = 'background: #f59e0b;';
+                            statusBadge = '<span style="color: #f59e0b; font-size: 12px; font-weight: 600;">IN PROGRESS</span>';
+                        }
+
+                        return `
+                        <div class="exam-card">
+                            <div class="exam-info">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                                    <h3 style="margin: 0;">${exam.title}</h3>
+                                    ${statusBadge}
+                                </div>
+                                <p style="color: var(--text-secondary); margin-bottom: 16px;">${exam.description}</p>
+                                <div class="exam-meta">
+                                    <div class="meta-item">
+                                        <span>⏱️</span>
+                                        <span>${exam.duration} mins</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <span>📅</span>
+                                        <span>${isNotStarted ? 'Starts' : 'Ends'} at: ${isNotStarted ? startTime.toLocaleTimeString() : endTime.toLocaleTimeString()}</span>
+                                    </div>
+                                </div>
+                                <button 
+                                    onclick="${isDisabled ? '' : `startExam('${exam._id}')`}" 
+                                    class="btn-start" 
+                                    style="${btnStyle}"
+                                    ${isDisabled ? 'disabled' : ''}
+                                >
+                                    ${btnText}
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    }).join('');
+                } else {
+                    container.innerHTML = `
+                        <div class="no-exams">
+                            <p>No active exams at the moment. Please check back later.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error fetching exams:', error);
+            }
+        }
+
+        function startExam(id) {
+            window.location.href = `/exam?id=${id}`;
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = '/';
+        }
+
+        fetchExams();
+        // Refresh exams every 30 seconds
+        setInterval(fetchExams, 30000);
+    </script>
+</body>
+
+</html>

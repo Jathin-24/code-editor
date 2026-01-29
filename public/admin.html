@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - CodeSpace</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="exam-mode.css">
+    <style>
+        .admin-container {
+            padding: 24px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .admin-header {
+            margin-bottom: 32px;
+        }
+
+        .admin-header h1 {
+            font-size: 32px;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .admin-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .admin-tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .admin-tab.active {
+            color: var(--text-primary);
+            border-bottom-color: #667eea;
+        }
+
+        .admin-tab:hover {
+            color: var(--text-primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-field label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .form-field input,
+        .form-field textarea,
+        .form-field select {
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-field textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .form-field input:focus,
+        .form-field textarea:focus,
+        .form-field select:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .checkbox-field {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-field input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .btn-create {
+            padding: 14px 32px;
+            background: var(--primary-gradient);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-create:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(102, 126, 234, 0.4);
+        }
+
+        .submissions-list {
+            display: grid;
+            gap: 16px;
+            max-height: 600px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .exam-list {
+            display: grid;
+            gap: 16px;
+            max-height: 600px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        /* Custom Scrollbar */
+        .submissions-list::-webkit-scrollbar,
+        .exam-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .submissions-list::-webkit-scrollbar-track,
+        .exam-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .submissions-list::-webkit-scrollbar-thumb,
+        .exam-list::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 10px;
+        }
+
+        .submissions-list::-webkit-scrollbar-thumb:hover,
+        .exam-list::-webkit-scrollbar-thumb:hover {
+            background: #667eea;
+        }
+
+        .submission-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            transition: var(--transition);
+        }
+
+        .submission-card:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+        }
+
+        .submission-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .submission-student {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .submission-status {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .status-submitted {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            border: 1px solid #22c55e;
+        }
+
+        .status-in-progress {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+            border: 1px solid #f59e0b;
+        }
+
+        .status-disqualified {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+
+        .submission-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .detail-value {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .cheating-flags {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .flag-item {
+            padding: 8px 12px;
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 3px solid #ef4444;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+
+        .exam-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .exam-card h3 {
+            font-size: 20px;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .exam-meta {
+            display: flex;
+            gap: 16px;
+            margin-top: 12px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .btn-view {
+            margin-top: 12px;
+            padding: 8px 16px;
+            background: rgba(102, 126, 234, 0.2);
+            border: 1px solid #667eea;
+            border-radius: 8px;
+            color: #667eea;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-view:hover {
+            background: rgba(102, 126, 234, 0.3);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="admin-container">
+        <div class="admin-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h1>📊 Admin Panel</h1>
+                <p style="color: var(--text-secondary);">Manage exams and monitor student submissions</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <div style="text-align: right;">
+                    <div style="font-weight: 600; color: var(--text-primary);" id="adminName">Admin</div>
+                    <div style="font-size: 12px; color: #22c55e;">● Online</div>
+                </div>
+                <button onclick="adminLogout()" class="btn-view"
+                    style="color: #ef4444; border-color: #ef4444; background: rgba(239, 68, 68, 0.1);">
+                    Logout
+                </button>
+            </div>
+        </div>
+
+        <div class="admin-tabs">
+            <button class="admin-tab active" data-tab="create">Create Exam</button>
+            <button class="admin-tab" data-tab="exams">Exams</button>
+            <button class="admin-tab" data-tab="submissions">Submissions</button>
+            <button class="admin-tab" data-tab="logs">Activity Logs</button>
+        </div>
+
+        <!-- Create Exam Tab -->
+        <div id="create" class="tab-content active">
+            <h2 style="margin-bottom: 24px; color: var(--text-primary);">Create New Exam</h2>
+
+            <form id="createExamForm">
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label>Exam Title *</label>
+                        <input type="text" id="title" required placeholder="e.g., HTML/CSS Basics Test">
+                    </div>
+
+                    <div class="form-field">
+                        <label>Exam Duration (minutes) *</label>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <input type="number" id="duration" value="60" required style="flex: 1; min-width: 100px;">
+                            <button type="button" onclick="setDuration(30)" class="btn-view"
+                                style="margin: 0; padding: 0 10px; font-size: 11px;">30m</button>
+                            <button type="button" onclick="setDuration(60)" class="btn-view"
+                                style="margin: 0; padding: 0 10px; font-size: 11px;">1h</button>
+                            <button type="button" onclick="setDuration(120)" class="btn-view"
+                                style="margin: 0; padding: 0 10px; font-size: 11px;">2h</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-field">
+                    <label>Description *</label>
+                    <input type="text" id="description" required placeholder="Brief description of the exam">
+                </div>
+
+                <div class="form-field">
+                    <label>Question / Task *</label>
+                    <textarea id="question" required
+                        placeholder="Enter the exam question or task description..."></textarea>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label>Start Time *</label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="datetime-local" id="startTime" required style="flex: 1;">
+                            <button type="button" onclick="setToNow('startTime')" class="btn-view"
+                                style="margin: 0; padding: 0 12px; font-size: 12px;">Now</button>
+                        </div>
+                    </div>
+
+                    <div class="form-field">
+                        <label>End Time *</label>
+                        <div style="display: flex; gap: 8px; flex-direction: column;">
+                            <div style="display: flex; gap: 8px;">
+                                <input type="datetime-local" id="endTime" required style="flex: 1;">
+                                <button type="button" onclick="setToNow('endTime')" class="btn-view"
+                                    style="margin: 0; padding: 0 12px; font-size: 12px;">Now</button>
+                            </div>
+                            <div style="display: flex; gap: 6px; margin-top: 4px;">
+                                <button type="button" onclick="addTime('endTime', 30)" class="btn-view"
+                                    style="margin: 0; padding: 4px 8px; font-size: 11px; flex: 1;">+30m</button>
+                                <button type="button" onclick="addTime('endTime', 60)" class="btn-view"
+                                    style="margin: 0; padding: 4px 8px; font-size: 11px; flex: 1;">+1h</button>
+                                <button type="button" onclick="addTime('endTime', 120)" class="btn-view"
+                                    style="margin: 0; padding: 4px 8px; font-size: 11px; flex: 1;">+2h</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label>Max Tab Switches</label>
+                        <input type="number" id="maxTabSwitches" value="3" min="1" max="10">
+                    </div>
+
+                    <div class="form-field" style="display: flex; gap: 24px; align-items: center;">
+                        <div class="checkbox-field">
+                            <input type="checkbox" id="requireFullScreen" checked>
+                            <label for="requireFullScreen">Require Full Screen</label>
+                        </div>
+
+                        <div class="checkbox-field">
+                            <input type="checkbox" id="allowCopyPaste">
+                            <label for="allowCopyPaste">Allow Copy/Paste</label>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-create">Create Exam</button>
+            </form>
+        </div>
+
+        <!-- Exams Tab -->
+        <div id="exams" class="tab-content">
+            <h2 style="margin-bottom: 24px; color: var(--text-primary);">All Exams</h2>
+            <div id="examsList" class="exam-list">
+                <p style="color: var(--text-secondary);">Loading exams...</p>
+            </div>
+        </div>
+
+        <!-- Submissions Tab -->
+        <div id="submissions" class="tab-content">
+            <h2 style="margin-bottom: 24px; color: var(--text-primary);">Student Submissions</h2>
+
+            <div class="form-field" style="max-width: 400px; margin-bottom: 24px;">
+                <label>Select Exam</label>
+                <select id="submissionExamSelect">
+                    <option value="">Select an exam...</option>
+                </select>
+            </div>
+
+            <div id="submissionsList" class="submissions-list">
+                <p style="color: var(--text-secondary);">Select an exam to view submissions</p>
+            </div>
+        </div>
+
+        <!-- Activity Logs Tab -->
+        <div id="logs" class="tab-content">
+            <h2 style="margin-bottom: 24px; color: var(--text-primary);">Activity Logs</h2>
+
+            <div class="form-field" style="max-width: 400px; margin-bottom: 24px;">
+                <label>Student Roll Number</label>
+                <input type="text" id="logRollNo" placeholder="Enter roll number...">
+                <button class="btn-view" onclick="loadLogs()">Load Logs</button>
+            </div>
+
+            <div id="logsList">
+                <p style="color: var(--text-secondary);">Enter a roll number to view activity logs</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin-script.js"></script>
+</body>
+
+</html>
