@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const Project = require('../models/Project');
+const Submission = require('../models/Submission');
+const { adminAuth } = require('../middleware/adminAuth');
 
 // Login/Register endpoint
 router.post('/login', async (req, res) => {
@@ -12,6 +14,14 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: 'Roll number and name are required'
+            });
+        }
+
+        const rollNoRegex = /^[0-9]{2}[A-Z]{2}[0-9][A-Z][0-9]{2}[A-Z0-9]{2}$/;
+        if (!rollNoRegex.test(rollNo.toUpperCase())) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid roll number format. Example: 23JR1A05A4'
             });
         }
 
@@ -142,14 +152,54 @@ router.post('/save', async (req, res) => {
     }
 });
 
-// Get all users (optional - for admin purposes)
-router.get('/users', async (req, res) => {
+// Get overall submission statistics (for admin dashboard)
+router.get('/admin/stats/overall', adminAuth, async (req, res) => {
     try {
-        const users = await User.find().select('-__v').sort({ lastLogin: -1 });
+        const totalSubmissions = await Submission.countDocuments();
+        const submitted = await Submission.countDocuments({ status: 'SUBMITTED' });
+        const disqualified = await Submission.countDocuments({ status: 'DISQUALIFIED' });
+        const inProgress = await Submission.countDocuments({ status: 'IN_PROGRESS' });
+
         res.json({
             success: true,
-            count: users.length,
-            users
+            stats: {
+                total: totalSubmissions,
+                submitted,
+                disqualified,
+                inProgress
+            }
+        });
+    } catch (error) {
+        console.error('Stats error:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch stats' });
+    }
+});
+
+// Get all users (for admin purposes)
+router.get('/users', adminAuth, async (req, res) => {
+    try {
+        const users = await User.find().select('-__v').sort({ lastLogin: -1 });
+
+        // Get submission counts for each user
+        const usersWithStats = await Promise.all(users.map(async (user) => {
+            const submissions = await Submission.find({ userId: user._id });
+            const completedCount = submissions.filter(s => s.status === 'SUBMITTED').length;
+            const disqualifiedCount = submissions.filter(s => s.status === 'DISQUALIFIED').length;
+
+            return {
+                ...user.toObject(),
+                stats: {
+                    total: submissions.length,
+                    completed: completedCount,
+                    disqualified: disqualifiedCount
+                }
+            };
+        }));
+
+        res.json({
+            success: true,
+            count: usersWithStats.length,
+            users: usersWithStats
         });
     } catch (error) {
         console.error('Get users error:', error);

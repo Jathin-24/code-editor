@@ -525,4 +525,56 @@ router.post('/admin/exams', adminAuth, async (req, res) => {
     }
 });
 
+// Admin: Update exam
+router.put('/admin/exams/:id', adminAuth, async (req, res) => {
+    try {
+        const exam = await Exam.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (!exam) {
+            return res.status(404).json({
+                success: false,
+                message: 'Exam not found'
+            });
+        }
+        res.json({
+            success: true,
+            exam,
+            message: 'Exam updated successfully'
+        });
+    } catch (error) {
+        console.error('Update exam error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to update exam'
+        });
+    }
+});
+
+// Admin: Delete exam
+router.delete('/admin/exams/:id', adminAuth, async (req, res) => {
+    try {
+        const exam = await Exam.findByIdAndDelete(req.params.id);
+        if (!exam) {
+            return res.status(404).json({
+                success: false,
+                message: 'Exam not found'
+            });
+        }
+
+        // Also delete related submissions and logs (optional but recommended)
+        await Submission.deleteMany({ examId: req.params.id });
+        await ActivityLog.deleteMany({ examId: req.params.id });
+
+        res.json({
+            success: true,
+            message: 'Exam and related data deleted successfully'
+        });
+    } catch (error) {
+        console.error('Delete exam error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to delete exam'
+        });
+    }
+});
+
 module.exports = router;
