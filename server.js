@@ -18,17 +18,19 @@ app.use(express.static(path.join(__dirname, 'public'), {
 }));
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
-    .then(() => {
+const connectDB = async () => {
+    try {
+        if (mongoose.connection.readyState >= 1) return;
+
+        await mongoose.connect(process.env.MONGODB_URI);
         console.log('✅ MongoDB connected successfully');
-    })
-    .catch((err) => {
+    } catch (err) {
         console.error('❌ MongoDB connection error:', err.message);
-        process.exit(1);
-    });
+        // Do not use process.exit(1) on Vercel as it crashes the function
+    }
+};
+
+connectDB();
 
 // API Routes
 app.use('/api', require('./routes/api'));
